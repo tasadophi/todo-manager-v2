@@ -3,7 +3,7 @@ import { HydratedDocument } from "mongoose";
 
 export type TodoDocument = HydratedDocument<Todo>;
 
-@Schema()
+@Schema({ versionKey: false })
 export class Todo {
   @Prop({ required: [true, "title is required !"] })
   title: string;

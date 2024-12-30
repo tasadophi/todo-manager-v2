@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { TodosController } from "./todos.controller";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Todo, TodoSchema } from "./todo.schema";
+import { Todo, TodoSchema } from "./schemas/todo.schema";
 import { TodosService } from "./todos.service";
 
 @Module({

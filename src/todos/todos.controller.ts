@@ -1,5 +1,6 @@
 import { TodosService } from "@/todos/todos.service";
-import { Controller, Get } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
+import { CreateTodoDto } from "./dtos/createTodo.dto";
 
 @Controller("todos")
 export class TodosController {
@@ -11,6 +12,15 @@ export class TodosController {
     return {
       message: "todos received successfully!",
       data: todos,
+    };
+  }
+
+  @Post("/create")
+  async createTodo(@Body() body: CreateTodoDto) {
+    const todo = await this.todosService.create(body);
+    return {
+      message: "todo created successfully!",
+      data: todo,
     };
   }
 }
