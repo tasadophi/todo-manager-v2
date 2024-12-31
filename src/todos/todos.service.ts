@@ -21,6 +21,10 @@ export class TodosService {
     return createdTodo;
   }
 
+  async getOne(todoId: string) {
+    return this.todoModel.findOne({ _id: todoId });
+  }
+
   async deleteOne(todoId: string) {
     return this.todoModel.deleteOne({ _id: todoId });
   }

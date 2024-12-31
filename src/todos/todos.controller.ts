@@ -32,6 +32,15 @@ export class TodosController {
     };
   }
 
+  @Get("/:id")
+  async getTodo(@Param("id") todoId: string) {
+    const todo = await this.todosService.getOne(todoId);
+    return {
+      message: "todo received successfully!",
+      data: todo,
+    };
+  }
+
   @Delete("/:id")
   @HttpCode(204)
   async deleteTodo(@Param("id") todoId: string) {
