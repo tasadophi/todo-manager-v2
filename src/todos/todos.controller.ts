@@ -7,8 +7,10 @@ import {
   HttpCode,
   Param,
   Post,
+  Put,
 } from "@nestjs/common";
 import { CreateTodoDto } from "./dtos/createTodo.dto";
+import { UpdateTodoDto } from "./dtos/updateTodo.dtp";
 
 @Controller("todos")
 export class TodosController {
@@ -37,6 +39,15 @@ export class TodosController {
     const todo = await this.todosService.getOne(todoId);
     return {
       message: "todo received successfully!",
+      data: todo,
+    };
+  }
+
+  @Put("/:id")
+  async updateTodo(@Param("id") todoId: string, @Body() body: UpdateTodoDto) {
+    const todo = await this.todosService.updateOne(todoId, body);
+    return {
+      message: "todo updated successfully!",
       data: todo,
     };
   }
