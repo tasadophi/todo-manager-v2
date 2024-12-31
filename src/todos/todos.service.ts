@@ -20,4 +20,8 @@ export class TodosService {
     });
     return createdTodo;
   }
+
+  async deleteOne(todoId: string) {
+    return this.todoModel.deleteOne({ _id: todoId });
+  }
 }

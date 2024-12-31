@@ -1,5 +1,13 @@
 import { TodosService } from "@/todos/todos.service";
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+} from "@nestjs/common";
 import { CreateTodoDto } from "./dtos/createTodo.dto";
 
 @Controller("todos")
@@ -15,12 +23,18 @@ export class TodosController {
     };
   }
 
-  @Post("/create")
+  @Post("/")
   async createTodo(@Body() body: CreateTodoDto) {
     const todo = await this.todosService.create(body);
     return {
       message: "todo created successfully!",
       data: todo,
     };
+  }
+
+  @Delete("/:id")
+  @HttpCode(204)
+  async deleteTodo(@Param("id") todoId: string) {
+    await this.todosService.deleteOne(todoId);
   }
 }
