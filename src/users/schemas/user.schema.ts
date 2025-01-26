@@ -4,7 +4,7 @@ import * as bcrypt from "bcrypt";
 
 export type UserDocument = HydratedDocument<User>;
 
-@Schema({ versionKey: false })
+@Schema({ versionKey: false, timestamps: true })
 export class User {
   @Prop({ required: [true, "email is required !"] })
   email: string;
