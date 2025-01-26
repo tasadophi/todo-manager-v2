@@ -1,4 +1,4 @@
-import { Model } from "mongoose";
+import { Model, ObjectId } from "mongoose";
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { User, UserDocument } from "@/users/schemas/user.schema";
@@ -16,6 +16,15 @@ export class UsersService {
     }
     const createdUser = await this.userModel.create(user);
     return this.sanitizeUser(createdUser);
+  }
+
+  async findById(id: ObjectId) {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new HttpException("user not found", HttpStatus.NOT_FOUND);
+    }
+
+    return this.sanitizeUser(user);
   }
 
   sanitizeUser(user: UserDocument) {
