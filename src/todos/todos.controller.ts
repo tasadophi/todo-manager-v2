@@ -8,10 +8,13 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from "@nestjs/common";
 import { CreateTodoDto } from "./dtos/createTodo.dto";
 import { UpdateTodoDto } from "./dtos/updateTodo.dtp";
+import { AuthGuard } from "@/auth/auth.guard";
 
+@UseGuards(AuthGuard)
 @Controller("todos")
 export class TodosController {
   constructor(private todosService: TodosService) {}
