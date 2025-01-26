@@ -27,6 +27,11 @@ export class UsersService {
     return this.sanitizeUser(user);
   }
 
+  async findByEmail(email: string) {
+    const user = await this.userModel.findOne({ email });
+    return user;
+  }
+
   sanitizeUser(user: UserDocument) {
     const sanitized = user.toObject();
     delete sanitized["password"];
