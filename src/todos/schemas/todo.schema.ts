@@ -1,9 +1,10 @@
+import { User } from "@/users/schemas/user.schema";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, SchemaTypes } from "mongoose";
 
 export type TodoDocument = HydratedDocument<Todo>;
 
-@Schema({ versionKey: false })
+@Schema({ versionKey: false, timestamps: true })
 export class Todo {
   @Prop({ required: [true, "title is required !"] })
   title: string;
@@ -16,6 +17,9 @@ export class Todo {
 
   @Prop()
   isFavorite: boolean;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
+  user: User;
 }
 
 export const TodoSchema = SchemaFactory.createForClass(Todo);

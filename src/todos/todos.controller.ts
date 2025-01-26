@@ -13,6 +13,7 @@ import {
 import { CreateTodoDto } from "./dtos/createTodo.dto";
 import { UpdateTodoDto } from "./dtos/updateTodo.dtp";
 import { AuthGuard } from "@/auth/auth.guard";
+import { GetUser, IGetUser } from "@/users/user.decorator";
 
 @UseGuards(AuthGuard)
 @Controller("todos")
@@ -20,8 +21,8 @@ export class TodosController {
   constructor(private todosService: TodosService) {}
 
   @Get("/")
-  async getTodos() {
-    const todos = await this.todosService.findAll();
+  async getTodos(@GetUser() user: IGetUser) {
+    const todos = await this.todosService.findAll(user._id);
     return {
       message: "todos received successfully!",
       data: todos,
@@ -29,8 +30,8 @@ export class TodosController {
   }
 
   @Post("/")
-  async createTodo(@Body() body: CreateTodoDto) {
-    const todo = await this.todosService.create(body);
+  async createTodo(@Body() body: CreateTodoDto, @GetUser() user: IGetUser) {
+    const todo = await this.todosService.create(body, user._id);
     return {
       message: "todo created successfully!",
       data: todo,
@@ -38,8 +39,8 @@ export class TodosController {
   }
 
   @Get("/:id")
-  async getTodo(@Param("id") todoId: string) {
-    const todo = await this.todosService.getOne(todoId);
+  async getTodo(@Param("id") todoId: string, @GetUser() user: IGetUser) {
+    const todo = await this.todosService.getOne(todoId, user._id);
     return {
       message: "todo received successfully!",
       data: todo,
@@ -47,8 +48,12 @@ export class TodosController {
   }
 
   @Put("/:id")
-  async updateTodo(@Param("id") todoId: string, @Body() body: UpdateTodoDto) {
-    const todo = await this.todosService.updateOne(todoId, body);
+  async updateTodo(
+    @Param("id") todoId: string,
+    @Body() body: UpdateTodoDto,
+    @GetUser() user: IGetUser
+  ) {
+    const todo = await this.todosService.updateOne(todoId, user._id, body);
     return {
       message: "todo updated successfully!",
       data: todo,
@@ -57,7 +62,7 @@ export class TodosController {
 
   @Delete("/:id")
   @HttpCode(204)
-  async deleteTodo(@Param("id") todoId: string) {
-    await this.todosService.deleteOne(todoId);
+  async deleteTodo(@Param("id") todoId: string, @GetUser() user: IGetUser) {
+    await this.todosService.deleteOne(todoId, user._id);
   }
 }
