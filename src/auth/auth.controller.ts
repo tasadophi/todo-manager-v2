@@ -3,11 +3,11 @@ import {
   Controller,
   Get,
   Post,
-  Request,
+  Req,
   Res,
   UseGuards,
 } from "@nestjs/common";
-import { Request as ExpressRequest, Response } from "express";
+import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "./auth.guard";
 import { SignupDto } from "./dtos/signup.dto";
@@ -53,7 +53,7 @@ export class AuthController {
   }
 
   @Post("refresh")
-  async refresh(@Request() req: ExpressRequest) {
+  async refresh(@Req() req: Request) {
     const { accessToken } = await this.authService.refresh(req);
     return {
       message: "token refreshed successfully!",

@@ -1,16 +1,73 @@
-import { Model, ObjectId } from "mongoose";
+import { Model, ObjectId, Query } from "mongoose";
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { Request } from "express";
 import { Todo } from "./schemas/todo.schema";
 import { CreateTodoDto } from "./dtos/createTodo.dto";
 import { UpdateTodoDto } from "./dtos/updateTodo.dtp";
+
+const disallowedSearchFields = [
+  "_id",
+  "createdAt",
+  "updatedAt",
+  "password",
+  "page",
+  "limit",
+  "startDate",
+  "endDate",
+  "user",
+];
 
 @Injectable()
 export class TodosService {
   constructor(@InjectModel(Todo.name) private todoModel: Model<Todo>) {}
 
-  async findAll(userId: ObjectId): Promise<Todo[]> {
-    return this.todoModel.find({ user: userId }).exec();
+  async searchByFields(
+    todosQuery: Query<Todo[], Todo>,
+    queryString: Request["query"]
+  ) {
+    // search on boolean and string fields
+    const fields: Record<string, unknown> = {};
+    const booleanFilters: Record<string, boolean>[] = [];
+    Object.keys(queryString).forEach((key) => {
+      if (!disallowedSearchFields.includes(key)) {
+        fields[key] = queryString[key];
+      }
+    });
+    const strFilters: Record<
+      string,
+      {
+        $regex: string;
+        $options: string;
+      }
+    >[] = [];
+    Object.keys(fields).forEach((key) => {
+      if (["false", "true"].includes(fields[key] as string)) {
+        booleanFilters.push({
+          [key]: fields[key] === "false" ? false : true,
+        });
+      } else {
+        strFilters.push({
+          [key]: {
+            $regex: fields[key] ? ".*" + fields[key] + ".*" : "",
+            $options: "i",
+          },
+        });
+      }
+    });
+    if (booleanFilters.length)
+      todosQuery = todosQuery.find({
+        $and: booleanFilters,
+      });
+    if (strFilters.length)
+      todosQuery = todosQuery.find({
+        $or: strFilters,
+      });
+    return todosQuery;
+  }
+
+  findAll(userId: ObjectId): Query<Todo[], Todo> {
+    return this.todoModel.find({ user: userId });
   }
 
   async create(params: CreateTodoDto, userId: ObjectId): Promise<Todo> {

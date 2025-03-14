@@ -1,4 +1,3 @@
-import { TodosService } from "@/todos/todos.service";
 import {
   Body,
   Controller,
@@ -8,10 +7,13 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UseGuards,
 } from "@nestjs/common";
+import { Request } from "express";
 import { CreateTodoDto } from "./dtos/createTodo.dto";
 import { UpdateTodoDto } from "./dtos/updateTodo.dtp";
+import { TodosService } from "./todos.service";
 import { AuthGuard } from "@/auth/auth.guard";
 import { GetUser, IGetUser } from "@/users/user.decorator";
 
@@ -21,8 +23,13 @@ export class TodosController {
   constructor(private todosService: TodosService) {}
 
   @Get("/")
-  async getTodos(@GetUser() user: IGetUser) {
-    const todos = await this.todosService.findAll(user._id);
+  async getTodos(@GetUser() user: IGetUser, @Req() req: Request) {
+    const todosQuery = this.todosService.findAll(user._id);
+    const searchedQuery = this.todosService.searchByFields(
+      todosQuery,
+      req.query
+    );
+    const todos = await searchedQuery;
     return {
       message: "todos received successfully!",
       data: todos,
