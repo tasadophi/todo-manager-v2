@@ -4,6 +4,7 @@ import * as bcrypt from "bcrypt";
 import { UsersService } from "@/users/users.service";
 import { SignupDto } from "./dtos/signup.dto";
 import { SigninDto } from "@/auth/dtos/signin.dto";
+import { Request } from "express";
 
 @Injectable()
 export class AuthService {
@@ -57,5 +58,31 @@ export class AuthService {
     };
     const tokens = this.generateTokens(payload);
     return tokens;
+  }
+
+  async refresh(req: Request) {
+    if (!req.cookies.refresh) {
+      throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+    }
+    // Destructuring refresh from cookie
+    const refreshToken = req.cookies.refresh;
+
+    // Verifying refresh token
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_SECRET,
+      });
+      const user = await this.userService.findById(payload.userId);
+      if (!user) {
+        throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+      }
+      const tokensPayload = {
+        userId: user._id,
+      };
+      return this.generateTokens(tokensPayload);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      throw new HttpException("Unauthorized", HttpStatus.UNAUTHORIZED);
+    }
   }
 }

@@ -1,5 +1,5 @@
-import { Body, Controller, Post, Res } from "@nestjs/common";
-import { Response } from "express";
+import { Body, Controller, Post, Request, Res } from "@nestjs/common";
+import { Request as ExpressRequest, Response } from "express";
 import { AuthService } from "./auth.service";
 import { SignupDto } from "./dtos/signup.dto";
 import { SigninDto } from "@/auth/dtos/signin.dto";
@@ -38,6 +38,15 @@ export class AuthController {
     });
     return {
       message: "user signedIn successfully!",
+      data: { accessToken },
+    };
+  }
+
+  @Post("refresh")
+  async refresh(@Request() req: ExpressRequest) {
+    const { accessToken } = await this.authService.refresh(req);
+    return {
+      message: "token refreshed successfully!",
       data: { accessToken },
     };
   }
