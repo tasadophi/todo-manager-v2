@@ -24,12 +24,7 @@ export class TodosController {
 
   @Get("/")
   async getTodos(@GetUser() user: IGetUser, @Req() req: Request) {
-    const todosQuery = this.todosService.findAll(user._id);
-    const searchedQuery = this.todosService.searchByFields(
-      todosQuery,
-      req.query
-    );
-    const todos = await searchedQuery;
+    const todos = await this.todosService.findAll(user._id, req.query);
     return {
       message: "todos received successfully!",
       data: todos,

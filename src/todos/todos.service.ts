@@ -22,10 +22,10 @@ const disallowedSearchFields = [
 export class TodosService {
   constructor(@InjectModel(Todo.name) private todoModel: Model<Todo>) {}
 
-  async searchByFields(
+  private searchByFields(
     todosQuery: Query<Todo[], Todo>,
     queryString: Request["query"]
-  ) {
+  ): Query<Todo[], Todo> {
     // search on boolean and string fields
     const fields: Record<string, unknown> = {};
     const booleanFilters: Record<string, boolean>[] = [];
@@ -66,8 +66,60 @@ export class TodosService {
     return todosQuery;
   }
 
-  findAll(userId: ObjectId): Query<Todo[], Todo> {
-    return this.todoModel.find({ user: userId });
+  private filterByDate(
+    todosQuery: Query<Todo[], Todo>,
+    queryString: Request["query"]
+  ): Query<Todo[], Todo> {
+    const getStartDate = () => {
+      if (queryString.startDate) {
+        const [year, month, day] = (queryString.startDate as string).split("-");
+        const startDate = new Date(`${year}-${month}-${day}`);
+        if (isNaN(startDate.getTime()))
+          throw new Error("startDate is invalid date !");
+        return { $gte: startDate };
+      }
+      return;
+    };
+    const getEndDate = () => {
+      if (queryString.endDate) {
+        const [year, month, day] = (queryString.endDate as string).split("-");
+        const endDate = new Date(`${year}-${month}-${day}`);
+        if (isNaN(endDate.getTime()))
+          throw new Error("endDate is invalid date !");
+        return { $lt: endDate };
+      }
+      return;
+    };
+    const getCreatedAt = () => {
+      const startDate = getStartDate();
+      const endDate = getEndDate();
+      if (startDate || endDate)
+        return {
+          createdAt: {
+            ...getStartDate(),
+            ...getEndDate(),
+          },
+        };
+      return;
+    };
+    getCreatedAt();
+    todosQuery = todosQuery.find({
+      ...getCreatedAt(),
+    });
+    return todosQuery;
+  }
+
+  findAll(
+    userId: ObjectId,
+    queryString: Request["query"]
+  ): Query<Todo[], Todo> {
+    const query = this.todoModel.find({ user: userId });
+    const searchByFieldsQuery = this.searchByFields(query, queryString);
+    const filterByDateQuery = this.filterByDate(
+      searchByFieldsQuery,
+      queryString
+    );
+    return filterByDateQuery;
   }
 
   async create(params: CreateTodoDto, userId: ObjectId): Promise<Todo> {
