@@ -22,10 +22,9 @@ const disallowedSearchFields = [
 export class TodosService {
   constructor(@InjectModel(Todo.name) private todoModel: Model<Todo>) {}
 
-  private searchByFields(
-    todosQuery: Query<Todo[], Todo>,
-    queryString: Request["query"]
-  ): Query<Todo[], Todo> {
+  private todosQuery: Query<Todo[], Todo>;
+
+  private searchByFields(queryString: Request["query"]) {
     // search on boolean and string fields
     const fields: Record<string, unknown> = {};
     const booleanFilters: Record<string, boolean>[] = [];
@@ -56,20 +55,17 @@ export class TodosService {
       }
     });
     if (booleanFilters.length)
-      todosQuery = todosQuery.find({
+      this.todosQuery = this.todosQuery.find({
         $and: booleanFilters,
       });
     if (strFilters.length)
-      todosQuery = todosQuery.find({
+      this.todosQuery = this.todosQuery.find({
         $or: strFilters,
       });
-    return todosQuery;
+    return this;
   }
 
-  private filterByDate(
-    todosQuery: Query<Todo[], Todo>,
-    queryString: Request["query"]
-  ): Query<Todo[], Todo> {
+  private filterByDate(queryString: Request["query"]) {
     const getStartDate = () => {
       if (queryString.startDate) {
         const [year, month, day] = (queryString.startDate as string).split("-");
@@ -102,11 +98,29 @@ export class TodosService {
         };
       return;
     };
-    getCreatedAt();
-    todosQuery = todosQuery.find({
+    this.todosQuery = this.todosQuery.find({
       ...getCreatedAt(),
     });
-    return todosQuery;
+    return this;
+  }
+
+  private sort() {
+    this.todosQuery = this.todosQuery.sort("-createdAt");
+    return this;
+  }
+
+  async paginate(
+    todosQuery: Query<Todo[], Todo>,
+    queryString: Request["query"]
+  ) {
+    const pageNumber = parseInt(queryString.page as string, 10) || 1;
+    const limitNumber = parseInt(queryString.limit as string, 10) || 10;
+    const offset = (pageNumber - 1) * limitNumber;
+    const count = await todosQuery.clone().countDocuments();
+    const items = await todosQuery.skip(offset).limit(limitNumber);
+    const pages = Math.ceil(count / limitNumber);
+    if (pages && pageNumber > pages) throw new Error("page is not exist !");
+    return { items, count, pages, page: pageNumber, limit: limitNumber };
   }
 
   findAll(
@@ -114,12 +128,10 @@ export class TodosService {
     queryString: Request["query"]
   ): Query<Todo[], Todo> {
     const query = this.todoModel.find({ user: userId });
-    const searchByFieldsQuery = this.searchByFields(query, queryString);
-    const filterByDateQuery = this.filterByDate(
-      searchByFieldsQuery,
-      queryString
-    );
-    return filterByDateQuery;
+    this.todosQuery = query;
+    this.searchByFields(queryString).filterByDate(queryString).sort();
+    return this.searchByFields(queryString).filterByDate(queryString).sort()
+      .todosQuery;
   }
 
   async create(params: CreateTodoDto, userId: ObjectId): Promise<Todo> {

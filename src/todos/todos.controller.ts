@@ -24,10 +24,14 @@ export class TodosController {
 
   @Get("/")
   async getTodos(@GetUser() user: IGetUser, @Req() req: Request) {
-    const todos = await this.todosService.findAll(user._id, req.query);
+    const todosQuery = this.todosService.findAll(user._id, req.query);
+    const { items: todos, ...pagination } = await this.todosService.paginate(
+      todosQuery,
+      req.query
+    );
     return {
       message: "todos received successfully!",
-      data: todos,
+      data: { todos, ...pagination },
     };
   }
 
