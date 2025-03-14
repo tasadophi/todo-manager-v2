@@ -1,8 +1,18 @@
-import { Body, Controller, Post, Request, Res } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  Res,
+  UseGuards,
+} from "@nestjs/common";
 import { Request as ExpressRequest, Response } from "express";
 import { AuthService } from "./auth.service";
+import { AuthGuard } from "./auth.guard";
 import { SignupDto } from "./dtos/signup.dto";
-import { SigninDto } from "@/auth/dtos/signin.dto";
+import { SigninDto } from "./dtos/signin.dto";
+import { GetUser, IGetUser } from "@/users/user.decorator";
 
 @Controller("auth")
 export class AuthController {
@@ -48,6 +58,15 @@ export class AuthController {
     return {
       message: "token refreshed successfully!",
       data: { accessToken },
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get("me")
+  async me(@GetUser() user: IGetUser) {
+    return {
+      message: "user received successfully!",
+      user,
     };
   }
 }
